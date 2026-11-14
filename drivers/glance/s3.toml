@@ -1,0 +1,7 @@
+# Images on S3: glance_store's s3 driver uses boto3.
+packages = []
+python = ["boto3"]
+check = "python -c 'import boto3, glance_store._drivers.s3'"
+license = "Apache-2.0 (boto3, glance_store)"
+source = "https://github.com/boto/boto3"
+tested = false

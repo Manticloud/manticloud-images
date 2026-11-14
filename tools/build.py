@@ -63,8 +63,14 @@ class Spec:
 
     def validate(self) -> None:
         problems = []
-        for where, value in [("upstream.toml commit", self.upstream["commit"]),
-                             (f"images/{self.image}.toml {self.branch} commit", self.project["commit"])]:
+        pins = [("upstream.toml commit", self.upstream["commit"]),
+                (f"images/{self.image}.toml {self.branch} commit", self.project["commit"])]
+        for name, extra in self.img.get("extra", {}).items():
+            if self.branch not in extra.get("branches", {}):
+                problems.append(f"images/{self.image}.toml extra {name} has no {self.branch} commit")
+            else:
+                pins.append((f"images/{self.image}.toml extra {name} {self.branch} commit", extra["branches"][self.branch]["commit"]))
+        for where, value in pins:
             if not COMMIT.match(value):
                 problems.append(f"{where} isn't a full commit: {value}")
         if "build_base" in self.br:
@@ -98,6 +104,9 @@ class Spec:
     def python(self) -> list[str]:
         return sorted({p for d in self.drivers.values() for p in d.get("python", [])})
 
+    def extras(self) -> dict[str, dict]:
+        return self.img.get("extra", {})
+
     def labels(self) -> dict[str, str]:
         return {"org.opencontainers.image.source": SOURCE,
                 "org.opencontainers.image.licenses": "Apache-2.0",
@@ -118,17 +127,25 @@ def upstream_checkout(spec: Spec) -> Path:
     return path
 
 
-def project_mirror(spec: Spec, context: Path) -> None:
-    """A bare mirror of the project's branch with `pinned` at the commit; the Dockerfile clones it over file://."""
-    cache = WORK / "mirrors" / f"{spec.project_name}.git"
+def mirror(name: str, source: str, branch: str, commit: str, context: Path) -> None:
+    """A bare mirror of a branch with `pinned` at the commit; the Dockerfile clones it over file://."""
+    cache = WORK / "mirrors" / f"{name}.git"
     if not cache.exists():
-        run("git", "clone", "-q", "--bare", spec.img["source"], str(cache))
-    if subprocess.run(["git", "-C", str(cache), "cat-file", "-e", spec.project["commit"] + "^{commit}"]).returncode:
-        run("git", "-C", str(cache), "fetch", "-q", "origin", f"+refs/heads/{spec.project['branch']}:refs/heads/{spec.project['branch']}", "--tags")
-    dest = context / "src" / f"{spec.project_name}.git"
-    run("git", "clone", "-q", "--bare", "--single-branch", "-b", spec.project["branch"], str(cache), str(dest))
+        run("git", "clone", "-q", "--bare", source, str(cache))
+    if subprocess.run(["git", "-C", str(cache), "cat-file", "-e", commit + "^{commit}"]).returncode:
+        run("git", "-C", str(cache), "fetch", "-q", "origin", f"+refs/heads/{branch}:refs/heads/{branch}", "--tags")
+    dest = context / "src" / f"{name}.git"
+    run("git", "clone", "-q", "--bare", "--single-branch", "-b", branch, str(cache), str(dest))
     run("git", "-C", str(dest), "fetch", "-q", "--tags", str(cache))
-    run("git", "-C", str(dest), "branch", "-f", "pinned", spec.project["commit"])
+    run("git", "-C", str(dest), "branch", "-f", "pinned", commit)
+
+
+def project_mirror(spec: Spec, context: Path) -> None:
+    """The project's mirror, and one for each extra source upstream's Dockerfile clones (Octavia's OVN provider)."""
+    mirror(spec.project_name, spec.img["source"], spec.project["branch"], spec.project["commit"], context)
+    for name, extra in spec.extras().items():
+        pin = extra["branches"][spec.branch]
+        mirror(name, pin["repo"], pin["branch"], pin["commit"], context)
 
 
 def constrain(original: str, pins: dict[str, dict]) -> str:
@@ -218,6 +235,8 @@ def build(spec: Spec, tag: str, no_cache: bool) -> None:
            "--build-arg", f"BASE_VENV_BUILDER={venv_builder}", "--build-arg", f"BASE_RUNTIME={base}",
            "--build-arg", f"{spec.img['repo_arg']}=file:///src/{spec.project_name}.git",
            "--build-arg", f"{spec.img['ref_arg']}=pinned",
+           *[a for name, extra in spec.extras().items() for a in
+             ("--build-arg", f"{extra['repo_arg']}=file:///src/{name}.git", "--build-arg", f"{extra['ref_arg']}=pinned")],
            "--build-arg", f"EXTRA_PACKAGES={' '.join(spec.packages())}",
            "--build-arg", f"EXTRA_PYTHON_PACKAGES={' '.join(spec.python())}"]
     for key, value in spec.labels().items():
@@ -277,9 +296,10 @@ def scan(tag: str, out: Path) -> None:
 
 
 def version(spec: Spec, tag: str) -> str:
-    found = in_image(tag, f"python -c 'import importlib.metadata as m; print(m.version(\"{spec.project_name}\"))'")
+    package = spec.img.get("package", spec.project_name)
+    found = in_image(tag, f"python -c 'import importlib.metadata as m; print(m.version(\"{package}\"))'")
     if found.returncode or not found.stdout.strip():
-        raise SystemExit(f"no {spec.project_name} version in {tag}: {found.stderr}")
+        raise SystemExit(f"no {package} version in {tag}: {found.stderr}")
     return f"{spec.branch}-{spec.br['ubuntu']}-{found.stdout.strip()}-{spec.project['commit'][:9]}"
 
 

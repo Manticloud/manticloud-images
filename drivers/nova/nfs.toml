@@ -1,0 +1,7 @@
+# NFS: nova-compute mounts an NFS volume's share, and instance disks on NFS, with mount.nfs.
+packages = ["nfs-common"]
+python = []
+check = "mount.nfs -V && python -c 'import os_brick.remotefs.remotefs'"
+license = "GPL-2.0 (nfs-utils), Apache-2.0 (os-brick)"
+source = "https://opendev.org/openstack/os-brick"
+tested = false

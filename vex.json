@@ -4,5 +4,19 @@
   "author": "MANTI",
   "timestamp": "2026-11-13T00:00:00Z",
   "version": 1,
-  "statements": []
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2012-3542"
+      },
+      "products": [
+        {
+          "@id": "pkg:pypi/keystone"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Fixed in Keystone 2012.1. Keystone left date-based versions in 2015, so a scanner compares 30.x with 2012.1 and reports it; every Keystone built here has the fix."
+    }
+  ]
 }

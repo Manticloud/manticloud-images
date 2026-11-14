@@ -1,0 +1,11 @@
+# Barbican, secrets.
+dockerfile = "barbican/Dockerfile"
+repo_arg = "BARBICAN_REPO"
+ref_arg = "BARBICAN_REF"
+source = "https://opendev.org/openstack/barbican"
+check = "barbican-manage --version"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "38b78256418058c4712f5dcab55627f470eecb0c" }
+"2026.2" = { branch = "stable/2026.2", commit = "de32745a7a4f77c98dac5906af128dac577750bf" }
+master = { branch = "master", commit = "cd590f1b71660cfcdd7712949b5a0617a31e35f2" }

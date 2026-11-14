@@ -34,6 +34,125 @@
       "datasourceTemplate": "git-refs"
     },
     {
+      "description": "A source upstream's Dockerfile clones beside the project (Octavia's OVN provider), at a commit on each branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/.+\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\", repo = \"(?<depName>[^\"]+)\" \\}"
+      ],
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "octavia, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/octavia\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/octavia",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "heat, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/heat\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/heat",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "python-openstackclient, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/openstack-client\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/python-openstackclient",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "barbican, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/barbican\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/barbican",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "neutron, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/neutron\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/neutron",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "nova, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/nova\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/nova",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "placement, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/placement\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/placement",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "glance, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/glance\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/glance",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "keystone, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/keystone\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/keystone",
+      "datasourceTemplate": "git-refs"
+    },
+    {
       "description": "Base images by tag and digest: openstack-helm-images' published ones, and Ubuntu's for master",
       "customType": "regex",
       "managerFilePatterns": [

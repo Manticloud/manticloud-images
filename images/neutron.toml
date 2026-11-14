@@ -1,0 +1,11 @@
+# Neutron, networking.
+dockerfile = "neutron/Dockerfile"
+repo_arg = "NEUTRON_REPO"
+ref_arg = "NEUTRON_REF"
+source = "https://opendev.org/openstack/neutron"
+check = "neutron-ovn-agent --version"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "62a3c7f9603b6f3a30a496dff9f02d3d083c1a98" }
+"2026.2" = { branch = "stable/2026.2", commit = "aa93f9178ba19a73fca7ec516bab710d0ecba1c5" }
+master = { branch = "master", commit = "559c5cc10adb7881dfc98cc004c1b2df14624eeb" }

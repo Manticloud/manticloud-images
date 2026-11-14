@@ -1,0 +1,20 @@
+# Octavia, load balancers, with OVN's provider driver, which upstream's Dockerfile clones beside it.
+dockerfile = "octavia/Dockerfile"
+repo_arg = "OCTAVIA_REPO"
+ref_arg = "OCTAVIA_REF"
+source = "https://opendev.org/openstack/octavia"
+check = "octavia-db-manage --help >/dev/null && python -c 'import ovn_octavia_provider.driver'"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "131c1cf3180ad0ff0f1ab14a82daaace418164a1" }
+"2026.2" = { branch = "stable/2026.2", commit = "c0f3c5f393f98678974be38b4074632ee324d620" }
+master = { branch = "master", commit = "04fa3e360addff92719f79d23eb9181d78b33ab8" }
+
+[extra.ovn-octavia-provider]
+repo_arg = "OVN_OCTAVIA_PROVIDER_REPO"
+ref_arg = "OVN_OCTAVIA_PROVIDER_REF"
+
+[extra.ovn-octavia-provider.branches]
+"2026.1" = { branch = "stable/2026.1", commit = "237de8b4b2b7bc054b60ca54aa5615ca8da8183d", repo = "https://opendev.org/openstack/ovn-octavia-provider" }
+"2026.2" = { branch = "stable/2026.2", commit = "c56940998594e0226b5041e63b671999e5124d9e", repo = "https://opendev.org/openstack/ovn-octavia-provider" }
+master = { branch = "master", commit = "65f8c142a6c0b92d5d2e1e8b00a4290b30bd2bf7", repo = "https://opendev.org/openstack/ovn-octavia-provider" }

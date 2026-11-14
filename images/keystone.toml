@@ -1,0 +1,11 @@
+# Keystone, identity.
+dockerfile = "keystone/Dockerfile"
+repo_arg = "KEYSTONE_REPO"
+ref_arg = "KEYSTONE_REF"
+source = "https://opendev.org/openstack/keystone"
+check = "keystone-manage --version && python -c 'import keystone.oauth1.core, keystone.federation.utils'"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "418792d9ea7bc2c8985de9ac94e6fa0c01ae1615" }
+"2026.2" = { branch = "stable/2026.2", commit = "e6dc5ae079e64c1f43347b14bdb0d4e25ae211b7" }
+master = { branch = "master", commit = "5a6525b02f8764d6cba7da8b76ff3ba2757b678a" }

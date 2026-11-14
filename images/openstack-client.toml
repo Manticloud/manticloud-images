@@ -1,0 +1,12 @@
+# The OpenStack client the charts' jobs run.
+dockerfile = "openstack-client/Dockerfile"
+repo_arg = "OPENSTACKCLIENT_REPO"
+ref_arg = "OPENSTACKCLIENT_REF"
+source = "https://opendev.org/openstack/python-openstackclient"
+package = "python-openstackclient"
+check = "openstack --version"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "49a1717e3b201ebed65bf9a98f1c9a382e1fee2f" }
+"2026.2" = { branch = "stable/2026.2", commit = "8bb083b838299d8c270d0f78a0d7b47e11a590f9" }
+master = { branch = "master", commit = "f8fe31a101128cadcb58cbd5b400f066f63a03ca" }

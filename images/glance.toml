@@ -1,0 +1,11 @@
+# Glance, images, with every driver in drivers/glance/.
+dockerfile = "glance/Dockerfile"
+repo_arg = "GLANCE_REPO"
+ref_arg = "GLANCE_REF"
+source = "https://opendev.org/openstack/glance"
+check = "glance-manage --version"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "6c406176890b03b2fb7f01adc14aef6b7c5157f4" }
+"2026.2" = { branch = "stable/2026.2", commit = "b2fe4c4fa242664a41f7dc0f278244cfe3772312" }
+master = { branch = "master", commit = "f74e568e0a46d6b982bfe6bdb0783cd43c6e28c0" }
