@@ -32,6 +32,8 @@ CI runs the same steps for every image on every branch (`.github/workflows/build
 attests (provenance and SBOM) and writes the release. `scan.yaml` scans what's published daily and keeps an issue open
 per image while a fixable critical or high CVE is found. Renovate moves the pins by pull request.
 
+**How the pins move, and what to do with each pull request and issue: [docs/updates.md](docs/updates.md).**
+
 ## Add
 
 - **A driver**: `drivers/<image>/<name>.toml`. Its Python packages are in upper-constraints, pinned with `==`, or a
