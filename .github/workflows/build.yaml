@@ -50,6 +50,8 @@ jobs:
       image: quay.io/podman/stable:v5.8.2@sha256:663e0dbf407987b7db3f20d3588c283a8228db17b282d2029a482d4d47e36964
       options: --privileged --volume /mnt/containers:/var/lib/containers
     env:
+      # podman's image builds with chroot isolation, which shares the runner's /dev; lvm2's install then hangs.
+      BUILDAH_ISOLATION: oci
       IMAGE: ${{ matrix.image }}
       BRANCH: ${{ matrix.branch }}
       ONE: localhost/manti/${{ matrix.image }}:${{ matrix.branch }}-one
