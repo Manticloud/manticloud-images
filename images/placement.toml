@@ -1,0 +1,12 @@
+# Placement.
+dockerfile = "placement/Dockerfile"
+repo_arg = "PLACEMENT_REPO"
+ref_arg = "PLACEMENT_REF"
+source = "https://opendev.org/openstack/placement"
+package = "openstack-placement"
+check = "placement-manage --version"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "2fcbb6adc02f0619c4a47fdb2f1b5cdac15903d9" }
+"2026.2" = { branch = "stable/2026.2", commit = "f4a89d3803cb23df22b8714569889ab39c918c34" }
+master = { branch = "master", commit = "180e7e4e2a198d24e290d90fba10f8be5dfa703c" }

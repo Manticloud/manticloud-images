@@ -1,0 +1,12 @@
+# Nova, compute, with every driver in drivers/nova/. noVNC and SPICE's HTML5 client come from upstream's
+# Dockerfile at its pinned tags.
+dockerfile = "nova/Dockerfile"
+repo_arg = "NOVA_REPO"
+ref_arg = "NOVA_REF"
+source = "https://opendev.org/openstack/nova"
+check = "nova-manage --version"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "b6d2057c0ea023c799a7da77958b1f12dd95fb85" }
+"2026.2" = { branch = "stable/2026.2", commit = "c461723b75b71fb58408ee049400eee54d22c234" }
+master = { branch = "master", commit = "ccb51d6f2ef740d092f75dda6d44812d2c5d2b9c" }

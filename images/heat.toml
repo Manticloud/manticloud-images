@@ -1,0 +1,12 @@
+# Heat, orchestration.
+dockerfile = "heat/Dockerfile"
+repo_arg = "HEAT_REPO"
+ref_arg = "HEAT_REF"
+source = "https://opendev.org/openstack/heat"
+package = "openstack-heat"
+check = "heat-manage --version"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "eb37721c5bcd78130b2389e3b561c51cd18cbe06" }
+"2026.2" = { branch = "stable/2026.2", commit = "76cdfa5faad508c24ba7e0d388106c2b29bde0bf" }
+master = { branch = "master", commit = "adb10f793423c7e5803bf82ac88742e148fc2a73" }

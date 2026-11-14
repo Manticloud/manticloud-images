@@ -25,6 +25,9 @@ ROOT = Path(__file__).resolve().parent.parent
 WORK = ROOT / "build"
 ENGINE = os.environ.get("ENGINE", "podman")
 TRIVY = "ghcr.io/aquasecurity/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c"
+# openssh-server's install makes host keys; every pod would share them, and anyone could pull them. Nova's chart
+# makes a pod's own when none is there, so the hook in our base layer removes them in the RUN that installs.
+HOST_KEYS = "/etc/ssh/ssh_host_*_key /etc/ssh/ssh_host_*_key.pub"
 CEPH_PACKAGES = ("ceph", "ceph-common", "python3-rados", "python3-rbd", "python3-cephfs", "python3-ceph-argparse",
                  "python3-ceph-common", "librados2", "librbd1", "libcephfs2", "libradosstriper1", "librgw2")
 SOURCE = "https://github.com/Manticloud/manticloud-images"
@@ -63,8 +66,14 @@ class Spec:
 
     def validate(self) -> None:
         problems = []
-        for where, value in [("upstream.toml commit", self.upstream["commit"]),
-                             (f"images/{self.image}.toml {self.branch} commit", self.project["commit"])]:
+        pins = [("upstream.toml commit", self.upstream["commit"]),
+                (f"images/{self.image}.toml {self.branch} commit", self.project["commit"])]
+        for name, extra in self.img.get("extra", {}).items():
+            if self.branch not in extra.get("branches", {}):
+                problems.append(f"images/{self.image}.toml extra {name} has no {self.branch} commit")
+            else:
+                pins.append((f"images/{self.image}.toml extra {name} {self.branch} commit", extra["branches"][self.branch]["commit"]))
+        for where, value in pins:
             if not COMMIT.match(value):
                 problems.append(f"{where} isn't a full commit: {value}")
         if "build_base" in self.br:
@@ -98,6 +107,9 @@ class Spec:
     def python(self) -> list[str]:
         return sorted({p for d in self.drivers.values() for p in d.get("python", [])})
 
+    def extras(self) -> dict[str, dict]:
+        return self.img.get("extra", {})
+
     def labels(self) -> dict[str, str]:
         return {"org.opencontainers.image.source": SOURCE,
                 "org.opencontainers.image.licenses": "Apache-2.0",
@@ -118,17 +130,26 @@ def upstream_checkout(spec: Spec) -> Path:
     return path
 
 
-def project_mirror(spec: Spec, context: Path) -> None:
-    """A bare mirror of the project's branch with `pinned` at the commit; the Dockerfile clones it over file://."""
-    cache = WORK / "mirrors" / f"{spec.project_name}.git"
+def mirror(name: str, source: str, branch: str, commit: str, context: Path) -> None:
+    """A bare mirror of a branch with `pinned` at the commit; the Dockerfile clones it over file://."""
+    cache = WORK / "mirrors" / f"{name}.git"
     if not cache.exists():
-        run("git", "clone", "-q", "--bare", spec.img["source"], str(cache))
-    if subprocess.run(["git", "-C", str(cache), "cat-file", "-e", spec.project["commit"] + "^{commit}"]).returncode:
-        run("git", "-C", str(cache), "fetch", "-q", "origin", f"+refs/heads/{spec.project['branch']}:refs/heads/{spec.project['branch']}", "--tags")
-    dest = context / "src" / f"{spec.project_name}.git"
-    run("git", "clone", "-q", "--bare", "--single-branch", "-b", spec.project["branch"], str(cache), str(dest))
-    run("git", "-C", str(dest), "fetch", "-q", "--tags", str(cache))
-    run("git", "-C", str(dest), "branch", "-f", "pinned", spec.project["commit"])
+        run("git", "clone", "-q", "--bare", source, str(cache))
+    if subprocess.run(["git", "-C", str(cache), "cat-file", "-e", commit + "^{commit}"]).returncode:
+        run("git", "-C", str(cache), "fetch", "-q", "origin", f"+refs/heads/{branch}:refs/heads/{branch}", "--tags")
+    dest = context / "src" / f"{name}.git"
+    run("git", "clone", "-q", "--bare", "--single-branch", "-b", branch, str(cache), str(dest))
+    # No background maintenance after the fetch: it writes into the mirror while the build copies it.
+    run("git", "-C", str(dest), "-c", "maintenance.auto=false", "-c", "gc.auto=0", "fetch", "-q", "--tags", str(cache))
+    run("git", "-C", str(dest), "branch", "-f", "pinned", commit)
+
+
+def project_mirror(spec: Spec, context: Path) -> None:
+    """The project's mirror, and one for each extra source upstream's Dockerfile clones (Octavia's OVN provider)."""
+    mirror(spec.project_name, spec.img["source"], spec.project["branch"], spec.project["commit"], context)
+    for name, extra in spec.extras().items():
+        pin = extra["branches"][spec.branch]
+        mirror(name, pin["repo"], pin["branch"], pin["commit"], context)
 
 
 def constrain(original: str, pins: dict[str, dict]) -> str:
@@ -191,9 +212,13 @@ def pin_layers(spec: Spec, venv_builder: str, base: str) -> tuple[str, str]:
         "ARG FROM\nFROM ${FROM}\nCOPY 50-manti-snapshot /etc/apt/apt.conf.d/\n"
         "COPY upper-constraints.txt /upper-constraints.txt\nCOPY src/ /src/\n"
         # uWSGI's parallel compile sometimes links before an object exists ("cannot find core/legion.o").
-        "ENV CPUCOUNT=1\n")
+        "ENV CPUCOUNT=1\n"
+        # Debug info records uv's random build folder, so C extensions built from source differ between builds.
+        "ENV CFLAGS=-g0\n")
+    (context / "50-manti-no-host-keys").write_text(f'DPkg::Post-Invoke {{ "rm -f {HOST_KEYS}"; }};\n')
     (context / "Containerfile.base").write_text(
-        "ARG FROM\nFROM ${FROM}\nCOPY 50-manti-snapshot /etc/apt/apt.conf.d/\nCOPY 50-manti-ceph /etc/apt/preferences.d/\n")
+        "ARG FROM\nFROM ${FROM}\nCOPY 50-manti-snapshot 50-manti-no-host-keys /etc/apt/apt.conf.d/\n"
+        "COPY 50-manti-ceph /etc/apt/preferences.d/\n")
     tags = (f"localhost/manti-pin/{spec.image}-venv_builder:{spec.branch}", f"localhost/manti-pin/{spec.image}-base:{spec.branch}")
     run(ENGINE, "build", "-q", "-f", str(context / "Containerfile.venv_builder"), "--build-arg", f"FROM={venv_builder}",
         "-t", tags[0], str(context))
@@ -218,6 +243,8 @@ def build(spec: Spec, tag: str, no_cache: bool) -> None:
            "--build-arg", f"BASE_VENV_BUILDER={venv_builder}", "--build-arg", f"BASE_RUNTIME={base}",
            "--build-arg", f"{spec.img['repo_arg']}=file:///src/{spec.project_name}.git",
            "--build-arg", f"{spec.img['ref_arg']}=pinned",
+           *[a for name, extra in spec.extras().items() for a in
+             ("--build-arg", f"{extra['repo_arg']}=file:///src/{name}.git", "--build-arg", f"{extra['ref_arg']}=pinned")],
            "--build-arg", f"EXTRA_PACKAGES={' '.join(spec.packages())}",
            "--build-arg", f"EXTRA_PYTHON_PACKAGES={' '.join(spec.python())}"]
     for key, value in spec.labels().items():
@@ -247,6 +274,8 @@ def check(spec: Spec, tag: str) -> None:
     for name, pin in spec.br.get("constraints", {}).items():
         if frozen.get(norm(name), pin["version"]) != pin["version"]:
             failures.append(f"{name} is {frozen[norm(name)]}, not the pinned {pin['version']}")
+    if keys := in_image(tag, f"ls {HOST_KEYS} 2>/dev/null").stdout.split():
+        failures.append(f"SSH host keys baked into the image: {', '.join(keys)}")
     checks = [("image", spec.img["check"])] + [(f"driver {n}", d["check"]) for n, d in spec.drivers.items()]
     for what, script in checks:
         result = in_image(tag, script)
@@ -277,9 +306,10 @@ def scan(tag: str, out: Path) -> None:
 
 
 def version(spec: Spec, tag: str) -> str:
-    found = in_image(tag, f"python -c 'import importlib.metadata as m; print(m.version(\"{spec.project_name}\"))'")
+    package = spec.img.get("package", spec.project_name)
+    found = in_image(tag, f"python -c 'import importlib.metadata as m; print(m.version(\"{package}\"))'")
     if found.returncode or not found.stdout.strip():
-        raise SystemExit(f"no {spec.project_name} version in {tag}: {found.stderr}")
+        raise SystemExit(f"no {package} version in {tag}: {found.stderr}")
     return f"{spec.branch}-{spec.br['ubuntu']}-{found.stdout.strip()}-{spec.project['commit'][:9]}"
 
 

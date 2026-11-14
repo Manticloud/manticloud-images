@@ -76,6 +76,14 @@ class CompareBuilds(unittest.TestCase):
         found, _ = diff(BASE, b)
         self.assertEqual(found, [f"differs (content): {RECORD}"])
 
+    def test_a_wheels_pyc_hash_in_record_passes_but_not_its_size(self):
+        a, b = dict(BASE), dict(BASE)
+        a[RECORD] = BASE[RECORD] + b"ldap/__pycache__/dn.cpython-312.opt-1.pyc,sha256=Des8o1PS,5055\n"
+        b[RECORD] = BASE[RECORD] + b"ldap/__pycache__/dn.cpython-312.opt-1.pyc,sha256=VSyfxN4C,5055\n"
+        self.assertEqual(diff(a, b)[0], [])
+        b[RECORD] = BASE[RECORD] + b"ldap/__pycache__/dn.cpython-312.opt-1.pyc,sha256=VSyfxN4C,5056\n"
+        self.assertEqual(diff(a, b)[0], [f"differs (content): {RECORD}"])
+
     def test_an_ignored_file_must_still_exist_with_the_same_mode(self):
         b = {k: v for k, v in BASE.items() if k != "/var/log/dpkg.log"}
         found, _ = diff(BASE, b)

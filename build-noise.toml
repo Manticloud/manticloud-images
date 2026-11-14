@@ -92,3 +92,18 @@ pattern = '^InitiatorName=iqn\.2004-10\.com\.ubuntu:01:[0-9a-f]+$'
 replace = 'InitiatorName=iqn.2004-10.com.ubuntu:01:RANDOM'
 why = "open-iscsi's postinst generates a random initiator name"
 upstream = "remove /etc/iscsi/initiatorname.iscsi after installing open-iscsi, so no two pods share a baked name"
+
+# dbus's install makes a random machine ID; nothing in these images runs dbus.
+[[ignore]]
+path = "/var/lib/dbus/machine-id"
+why = "dbus's postinst generates a random machine ID"
+upstream = "remove /var/lib/dbus/machine-id in the RUN that installs dbus"
+
+# A wheel built from source with bytecode in it records each .pyc's hash; the .pyc embeds the build's time. The
+# installed .pyc files are still compared, and must match.
+[[normalize]]
+path = "/var/lib/openstack/lib/python*/site-packages/*.dist-info/RECORD"
+pattern = '^(.*\.pyc),sha256=[^,]*,'
+replace = '\1,sha256=-,'
+why = "RECORD lists the hashes of .pyc files the wheel was built with, which embed the build's time"
+upstream = "SOURCE_DATE_EPOCH in the build stage, if the cost of checked-hash .pyc files at import is acceptable"
