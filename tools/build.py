@@ -189,7 +189,9 @@ def pin_layers(spec: Spec, venv_builder: str, base: str) -> tuple[str, str]:
     project_mirror(spec, context)
     (context / "Containerfile.venv_builder").write_text(
         "ARG FROM\nFROM ${FROM}\nCOPY 50-manti-snapshot /etc/apt/apt.conf.d/\n"
-        "COPY upper-constraints.txt /upper-constraints.txt\nCOPY src/ /src/\n")
+        "COPY upper-constraints.txt /upper-constraints.txt\nCOPY src/ /src/\n"
+        # uWSGI's parallel compile sometimes links before an object exists ("cannot find core/legion.o").
+        "ENV CPUCOUNT=1\n")
     (context / "Containerfile.base").write_text(
         "ARG FROM\nFROM ${FROM}\nCOPY 50-manti-snapshot /etc/apt/apt.conf.d/\nCOPY 50-manti-ceph /etc/apt/preferences.d/\n")
     tags = (f"localhost/manti-pin/{spec.image}-venv_builder:{spec.branch}", f"localhost/manti-pin/{spec.image}-base:{spec.branch}")
