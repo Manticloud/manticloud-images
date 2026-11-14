@@ -1,0 +1,4 @@
+# openstack-helm-images (Apache-2.0): the Dockerfiles every image here is built from, at one commit.
+repo = "https://opendev.org/openstack/openstack-helm-images"
+branch = "master"
+commit = "74727162f4864f9a1397e6fd24f179f52f8b44fa"

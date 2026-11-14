@@ -1,0 +1,18 @@
+# OpenStack master on Ubuntu 26.04. openstack-helm-images publishes no master base images, so they're built here
+# from its own Dockerfiles, every input pinned. Published for the next release's work; a deployer release never pins it.
+ubuntu = "ubuntu_resolute"
+snapshot = "20261113T000000Z"
+
+[build_base]
+from = "public.ecr.aws/ubuntu/ubuntu:resolute@sha256:1cec10ad04e9e13d1107ae55c475ea3e8305871bd644fe39d7a926e91eaa3642"
+# apt reaches snapshot.ubuntu.com over HTTPS before Ubuntu's image has CA certificates: the bundle comes from here.
+ca = "quay.io/airshipit/base:2026.2-ubuntu_resolute@sha256:1f62e77e81ff887d11fe86ff58d9a9f9a544e4cabd466a0e83b8e311162b9416"
+uv = "0.13.8@sha256:5cc1805e2426484abca4ad46ea783bab281fdb225fd82d8ce6d66a81254bac85"
+requirements = "15752394b49ee5c491257a6bc0e2cfd773971a25"
+ceph_repo = "https://mirror.mirantis.com/acicd/ceph-20.2.x/resolute"
+ceph_key = "https://mirror.mirantis.com/acicd/ceph-20.2.x/resolute/release.asc"
+
+[ceph]
+version = "20.2.4-1+mirantis1+u26.04"
+
+[constraints]

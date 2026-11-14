@@ -1,0 +1,11 @@
+# Cinder, with the drivers MANTI's storage profiles offer. One image serves every backend.
+dockerfile = "cinder/Dockerfile"
+repo_arg = "CINDER_REPO"
+ref_arg = "CINDER_REF"
+source = "https://opendev.org/openstack/cinder"
+check = "cinder-manage --version"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "58f7ac750dba3648d0f5c8517dba5e8f529f26cd" }
+"2026.2" = { branch = "stable/2026.2", commit = "20990c7f3033c55e59ed28ca2f391f935456fe89" }
+master = { branch = "master", commit = "4aaea83ebfc2b6bf212487b4554561fe92886aa8" }

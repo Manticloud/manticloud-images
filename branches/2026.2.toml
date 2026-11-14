@@ -1,0 +1,17 @@
+# OpenStack 2026.2 on Ubuntu 26.04, on openstack-helm-images' published base images.
+ubuntu = "ubuntu_resolute"
+venv_builder = "quay.io/airshipit/venv_builder:2026.2-ubuntu_resolute@sha256:1e3bb8d72361c1620c48bac9ba8c45c8309282c82fea7d987fcc4ae9addd92cd"
+base = "quay.io/airshipit/base:2026.2-ubuntu_resolute@sha256:1f62e77e81ff887d11fe86ff58d9a9f9a544e4cabd466a0e83b8e311162b9416"
+snapshot = "20261113T000000Z"
+
+[ceph]
+version = "20.2.4-1+mirantis1+u26.04"
+
+[constraints]
+cryptography = { version = "50.0.2", why = "CVE-2026-26007, CVE-2026-69247, CVE-2026-69249, GHSA-537c-gmf6-5ccf" }
+cursive = { version = "0.3.1", why = "cryptography 47 and later dropped the binary curves 0.2.3 names at import" }
+dnspython = { version = "2.9.2", why = "CVE-2026-114605, CVE-2026-128089" }
+msgpack = { version = "1.2.3", why = "CVE-2026-114613" }
+PyJWT = { version = "2.14.0", why = "CVE-2026-102266, CVE-2026-102267, CVE-2026-102268 (critical), CVE-2026-102271, CVE-2026-102272, CVE-2026-102273, GHSA-pxh4-856f-4h89" }
+pyOpenSSL = { version = "26.4.0", why = "CVE-2026-27459; 26.4.0 is the first that takes cryptography 50" }
+urllib3 = { version = "2.8.0", why = "CVE-2026-97687, CVE-2026-97689" }
