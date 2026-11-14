@@ -1,7 +1,15 @@
 # MANTI images
 
-OpenStack service images built from openstack-helm-images' own Dockerfiles at a pinned commit, with storage drivers
-added as data and every input pinned. Published to `ghcr.io/manticloud/<image>`.
+OpenStack service images: openstack-helm-images' own, built from its Dockerfiles, with some extra security on top.
+Published to `ghcr.io/manticloud/<image>`.
+
+- **Every input pinned**: the project and upstream at a commit, base images by digest, Ubuntu's packages at a snapshot
+  date. Two builds from scratch must hold the same files (`tools/compare_builds.py`).
+- **CVE fixes**: libraries with a fixable critical or high CVE are pinned to the fixed version before anything installs,
+  each with the CVEs it fixes; the build fails on any left.
+- **Attested**: each published image carries build provenance and an SBOM; a daily scan reopens an issue when a new CVE
+  lands in a published image.
+- **Storage drivers added as data**, each with a check that it loads (`drivers/`).
 
 | Path | What |
 |---|---|
