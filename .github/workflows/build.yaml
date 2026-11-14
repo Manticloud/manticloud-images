@@ -106,6 +106,20 @@ jobs:
           name: published-${{ matrix.image }}-${{ matrix.branch }}
           path: published/
 
+  # The one check main's ruleset requires: it passes only if every image on every branch did, so adding a branch or an
+  # image never means editing the ruleset.
+  images:
+    needs: [test, image]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every image on every branch passed
+        env:
+          RESULTS: ${{ needs.test.result }} ${{ needs.image.result }}
+        run: |
+          echo "test and image: $RESULTS"
+          [ "$RESULTS" = "success success" ]
+
   release:
     needs: image
     if: startsWith(github.ref, 'refs/tags/v')
