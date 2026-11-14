@@ -1,0 +1,26 @@
+# OpenStack 2026.1 on Ubuntu 24.04, on openstack-helm-images' published base images.
+ubuntu = "ubuntu_noble"
+venv_builder = "quay.io/airshipit/venv_builder:2026.1-ubuntu_noble@sha256:ad4ba3bd1c248782ad7f2bef4eb825db064d05610ec432bf7d3432c30073055f"
+base = "quay.io/airshipit/base:2026.1-ubuntu_noble@sha256:b16617fe13a679f0fa9c3b639b158173ea7aee194bcce28c1a0d2970125293e1"
+
+# Ubuntu's packages as they were at this time (snapshot.ubuntu.com).
+snapshot = "20261113T000000Z"
+
+# Ceph's packages come from a repository that keeps only its newest version: this one, or the build fails.
+[ceph]
+version = "20.2.4-1+mirantis1"
+
+# Written into upper-constraints before anything installs. Each says why.
+[constraints]
+cryptography = { version = "50.0.2", why = "CVE-2026-26007, CVE-2026-69247, CVE-2026-69249, GHSA-537c-gmf6-5ccf" }
+cursive = { version = "0.3.1", why = "cryptography 47 and later dropped the binary curves 0.2.3 names at import" }
+dnspython = { version = "2.9.2", why = "CVE-2026-114605, CVE-2026-128089" }
+httplib2 = { version = "0.32.0", why = "CVE-2026-59939" }
+lxml = { version = "6.1.0", why = "CVE-2026-41066" }
+Mako = { version = "1.3.12", why = "CVE-2026-41205, CVE-2026-44307" }
+msgpack = { version = "1.2.3", why = "CVE-2026-114613, GHSA-6v7p-g79w-8964" }
+pyasn1 = { version = "0.6.5", why = "CVE-2026-30922, CVE-2026-59884, CVE-2026-59885, CVE-2026-59886, CVE-2026-119194, CVE-2026-119195, CVE-2026-119196, CVE-2026-119197" }
+PyJWT = { version = "2.14.0", why = "CVE-2026-32597, CVE-2026-48526, CVE-2026-102267, CVE-2026-102268 (critical), CVE-2026-102271, GHSA-pxh4-856f-4h89" }
+pyOpenSSL = { version = "26.4.0", why = "CVE-2026-27459; 26.4.0 is the first that takes cryptography 50" }
+urllib3 = { version = "2.8.0", why = "CVE-2026-44431, CVE-2026-44432, CVE-2026-97687, CVE-2026-97689" }
+zstd = { version = "1.5.7.2", why = "1.5.7.3 is yanked on PyPI: not thread safe" }

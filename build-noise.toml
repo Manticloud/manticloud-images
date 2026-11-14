@@ -1,0 +1,94 @@
+# What may differ between two builds of one image from the same pinned inputs (tools/compare_builds.py).
+# Anything else that differs means an input floats, and the build fails.
+#
+# [[ignore]]: the file's content may differ; its kind, mode and owner must still match.
+# [[normalize]]: the pattern is replaced before hashing, so the rest of the file must still match.
+# Paths are globs over the image's absolute paths ("*" crosses "/"). Each rule says why, and what change in
+# openstack-helm-images would remove it. A rule that matches nothing is reported, so it comes out when upstream fixes it.
+
+# Written by the container engine when the compared container is created, not part of the image.
+[[ignore]]
+path = "/etc/hostname"
+why = "the container engine writes it at create"
+upstream = "none needed"
+
+[[ignore]]
+path = "/etc/hosts"
+why = "the container engine writes it at create"
+upstream = "none needed"
+
+[[ignore]]
+path = "/etc/resolv.conf"
+why = "the container engine writes it at create"
+upstream = "none needed"
+
+# apt and dpkg leave logs and a cache with the time of the install.
+[[ignore]]
+path = "/var/log/dpkg.log"
+why = "dpkg's log, with the install's timestamps"
+upstream = "remove /var/log/dpkg.log, /var/log/apt/*.log and /var/log/alternatives.log in the RUN that installs"
+
+[[ignore]]
+path = "/var/log/apt/*.log"
+why = "apt's logs, with the install's timestamps"
+upstream = "as /var/log/dpkg.log"
+
+[[ignore]]
+path = "/var/log/alternatives.log"
+why = "update-alternatives' log, with the install's timestamps"
+upstream = "as /var/log/dpkg.log"
+
+[[ignore]]
+path = "/var/cache/ldconfig/aux-cache"
+why = "ldconfig's cache, keyed by file times"
+upstream = "remove /var/cache/ldconfig/aux-cache in the RUN that installs"
+
+# uv records when it installed a package built from source.
+[[ignore]]
+path = "/var/lib/openstack/lib/python*/site-packages/*.dist-info/uv_cache.json"
+why = "uv's install time for a package built from a local checkout"
+upstream = "remove */site-packages/*.dist-info/uv_cache.json after uv pip install"
+
+[[normalize]]
+path = "/var/lib/openstack/lib/python*/site-packages/*.dist-info/RECORD"
+pattern = '^(.*/uv_cache\.json),sha256=[^,]*,\d+$'
+replace = '\1,sha256=-,0'
+why = "RECORD lists uv_cache.json's hash and size"
+upstream = "as uv_cache.json"
+
+# uWSGI is compiled from source: the binary embeds the build's date and uv's random build folder.
+[[ignore]]
+path = "/var/lib/openstack/bin/uwsgi"
+why = "embeds the build date and uv's random build path (and so its GNU build ID)"
+upstream = "pass SOURCE_DATE_EPOCH and CFLAGS=-ffile-prefix-map=/root/.cache/uv=/uv to the uv pip install"
+
+[[normalize]]
+path = "/var/lib/openstack/lib/python*/site-packages/uwsgi-*.dist-info/RECORD"
+pattern = '^(\.\./\.\./\.\./bin/uwsgi),sha256=[^,]*,'
+replace = '\1,sha256=-,'
+why = "RECORD lists the uwsgi binary's hash; its size must still match"
+upstream = "as /var/lib/openstack/bin/uwsgi"
+
+# useradd stamps the day the account was made; a build that crosses midnight UTC changes it.
+[[normalize]]
+path = "/etc/shadow"
+pattern = '^([^:\n]*:[^:\n]*:)\d+:'
+replace = '\1DAY:'
+why = "the last password change day (field 3) is the build's day"
+upstream = "SOURCE_DATE_EPOCH in the RUN that runs useradd (shadow honors it)"
+
+[[normalize]]
+path = "/etc/shadow-"
+pattern = '^([^:\n]*:[^:\n]*:)\d+:'
+replace = '\1DAY:'
+why = "useradd's backup of /etc/shadow, as /etc/shadow"
+upstream = "as /etc/shadow, and remove /etc/shadow- and /etc/gshadow-"
+
+# open-iscsi's install makes a random initiator name. Each pod must use its host's name instead
+# (the charts mount the host's /etc/iscsi), so the baked one is noise here and a hazard there.
+[[normalize]]
+path = "/etc/iscsi/initiatorname.iscsi"
+pattern = '^InitiatorName=iqn\.2004-10\.com\.ubuntu:01:[0-9a-f]+$'
+replace = 'InitiatorName=iqn.2004-10.com.ubuntu:01:RANDOM'
+why = "open-iscsi's postinst generates a random initiator name"
+upstream = "remove /etc/iscsi/initiatorname.iscsi after installing open-iscsi, so no two pods share a baked name"

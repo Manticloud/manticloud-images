@@ -1,0 +1,7 @@
+# Pure Storage FlashArray: Cinder's in-tree Pure drivers use Pure's two Python clients.
+packages = []
+python = ["py-pure-client", "purestorage==1.19.0"]
+check = "python -W ignore -c 'from cinder import objects; objects.register_all(); import cinder.volume.drivers.pure, pypureclient, purestorage'"
+license = "BSD-2-Clause (py-pure-client, purestorage), Apache-2.0 (Cinder)"
+source = "https://github.com/PureStorage-OpenConnect/py-pure-client"
+tested = false

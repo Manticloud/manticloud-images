@@ -1,0 +1,7 @@
+# NFS volumes and backups: Cinder's NfsDriver and NFSBackupDriver mount shares with mount.nfs.
+packages = ["nfs-common"]
+python = []
+check = "mount.nfs -V && python -c 'from cinder import objects; objects.register_all(); import cinder.volume.drivers.nfs, cinder.backup.drivers.nfs'"
+license = "GPL-2.0 (nfs-utils), Apache-2.0 (Cinder)"
+source = "https://opendev.org/openstack/cinder"
+tested = false

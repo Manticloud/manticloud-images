@@ -1,0 +1,42 @@
+# Daily: scan every image the latest release published. One issue per image and branch stays open while a fixable
+# critical or high CVE is found, and closes when none is.
+name: Scan published images
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Scan and keep one issue per image open while it has a fixable CVE
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIVY: ghcr.io/aquasecurity/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c
+        run: |
+          gh release download --pattern images.txt --dir . || { echo "No release yet"; exit 0; }
+          while read -r ref; do
+            [ -n "$ref" ] || continue
+            title="CVEs in ${ref%%@*}"
+            docker run --rm -v "$PWD:/w" "$TRIVY" image -q --format table --exit-code 1 --vex /w/vex.json \
+              --ignore-unfixed --severity CRITICAL,HIGH "$ref" > report.txt 2>&1 && found=0 || found=1
+            issue=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+            if [ "$found" = 1 ]; then
+              { echo "Fixable critical or high CVEs in \`$ref\`, $(date -u +%F):"; echo '```'; cat report.txt; echo '```'; } > body.md
+              if [ -n "$issue" ]; then gh issue comment "$issue" --body-file body.md
+              else gh issue create --title "$title" --body-file body.md; fi
+            elif [ -n "$issue" ]; then
+              gh issue close "$issue" --comment "No fixable critical or high CVE on $(date -u +%F)."
+            fi
+          done < images.txt

@@ -1,0 +1,7 @@
+# TrueNAS SCALE over iSCSI: TrueNAS's out-of-tree driver, volume_driver = truenas_cinder.driver.TrueNASDriver.
+packages = []
+python = ["git+https://github.com/truenas/truenas_cinder@dc4011240954695ecc2f33d6ce7ce037c0e10889"]
+check = "python -c 'from truenas_cinder import client, driver; assert client.DEPENDENCY_AVAILABLE'"
+license = "Apache-2.0"
+source = "https://github.com/truenas/truenas_cinder"
+tested = false

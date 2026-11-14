@@ -1,0 +1,108 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "dependencyDashboard": true,
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "prConcurrentLimit": 10,
+  "customManagers": [
+    {
+      "description": "openstack-helm-images, at a commit on its branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^upstream\\.toml$/"
+      ],
+      "matchStrings": [
+        "repo = \"(?<depName>[^\"]+)\"\\nbranch = \"(?<currentValue>[^\"]+)\"\\ncommit = \"(?<currentDigest>[0-9a-f]{40})\""
+      ],
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "Cinder, at a commit on each OpenStack branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images/cinder\\.toml$/"
+      ],
+      "matchStrings": [
+        "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/cinder",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "Base images by tag and digest: openstack-helm-images' published ones, and Ubuntu's for master",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^branches/.+\\.toml$/"
+      ],
+      "matchStrings": [
+        "(?:venv_builder|base|from|ca) = \"(?<depName>[^:\"]+):(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[0-9a-f]{64})\""
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "uv, for master's own venv_builder",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^branches/.+\\.toml$/"
+      ],
+      "matchStrings": [
+        "uv = \"(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[0-9a-f]{64})\""
+      ],
+      "depNameTemplate": "ghcr.io/astral-sh/uv",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "openstack/requirements, for master's upper-constraints",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^branches/.+\\.toml$/"
+      ],
+      "matchStrings": [
+        "requirements = \"(?<currentDigest>[0-9a-f]{40})\""
+      ],
+      "depNameTemplate": "https://opendev.org/openstack/requirements",
+      "currentValueTemplate": "master",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "A driver's source at a commit",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^drivers/.+\\.toml$/"
+      ],
+      "matchStrings": [
+        "git\\+(?<depName>https://github\\.com/[^@\"]+)@(?<currentDigest>[0-9a-f]{40})"
+      ],
+      "currentValueTemplate": "main",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "A driver's Python package pinned with ==",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^drivers/.+\\.toml$/"
+      ],
+      "matchStrings": [
+        "\"(?<depName>[A-Za-z0-9_.-]+)==(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "description": "Tools by tag and digest: Trivy, and podman's image the workflow builds in",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^tools/build\\.py$/",
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "(?<depName>(?:ghcr|quay)\\.io/[^:\"\\s]+):(?<currentValue>v?\\d[^@\"\\s]*)@(?<currentDigest>sha256:[0-9a-f]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ]
+}
