@@ -1,4 +1,4 @@
-# Cinder, with the drivers MANTI's storage profiles offer. One image serves every backend.
+# Cinder, with every driver in drivers/cinder/. One image serves every backend.
 dockerfile = "cinder/Dockerfile"
 repo_arg = "CINDER_REPO"
 ref_arg = "CINDER_REF"

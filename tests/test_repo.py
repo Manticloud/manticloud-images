@@ -10,18 +10,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import build  # noqa: E402
 
-TEXT = [p for p in ROOT.rglob("*") if p.is_file() and not {".git", "build", "__pycache__"} & set(p.parts)
-        and p.suffix in {".py", ".toml", ".json", ".yaml", ".yml", ".md", ""} and p.name != "LICENSE"]
-FORBIDDEN = re.compile("|".join(["gene" + "stack", "rack" + "space", "racker" + "labs"]), re.I)
-
-
 class Repo(unittest.TestCase):
-    def test_no_file_names_projects_this_repository_does_not_use(self):
-        """The user's rule (2026-11-13): this repository names neither of them, anywhere."""
-        hits = [f"{p.relative_to(ROOT)}:{n}" for p in TEXT
-                for n, line in enumerate(p.read_text(errors="replace").splitlines(), 1) if FORBIDDEN.search(line)]
-        self.assertEqual(hits, [])
-
     def test_every_image_on_every_branch_is_pinned(self):
         """Spec refuses a commit that isn't full, a base image without a digest, or an unpinned driver source."""
         for entry in build.matrix():

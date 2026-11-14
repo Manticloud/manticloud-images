@@ -1,8 +1,7 @@
 # MANTI images
 
-The OpenStack images MANTI Deployer must change, and only those: openstack-helm-images' own Dockerfiles at a pinned
-commit, each storage driver added as data, every input pinned. Published to `ghcr.io/manticloud/<image>`; why and how
-in adr/0064 of manticloud-deployer.
+OpenStack service images built from openstack-helm-images' own Dockerfiles at a pinned commit, with storage drivers
+added as data and every input pinned. Published to `ghcr.io/manticloud/<image>`.
 
 | Path | What |
 |---|---|

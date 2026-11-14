@@ -1,5 +1,5 @@
 # OpenStack master on Ubuntu 26.04. openstack-helm-images publishes no master base images, so they're built here
-# from its own Dockerfiles, every input pinned. Published for the next release's work; a deployer release never pins it.
+# from its own Dockerfiles, every input pinned. For development against the next release, never for production.
 ubuntu = "ubuntu_resolute"
 snapshot = "20261113T000000Z"
 

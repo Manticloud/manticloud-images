@@ -46,7 +46,7 @@ BASE = {
 
 class CompareBuilds(unittest.TestCase):
     def test_the_two_spike_builds_differ_only_in_noise(self):
-        """The differences two from-scratch builds showed on 2026-11-13 (D1, D2) all pass."""
+        """The differences two from-scratch builds of Cinder showed all pass."""
         b = dict(BASE)
         b["/etc/shadow"] = b"root:*:20767:0:99999:7:::\ncinder:!:20771:0:99999:7:::\n"
         b["/etc/iscsi/initiatorname.iscsi"] = b"## comment\nInitiatorName=iqn.2004-10.com.ubuntu:01:ab691eee42\n"

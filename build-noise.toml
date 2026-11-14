@@ -3,9 +3,8 @@
 #
 # [[ignore]]: the file's content may differ; its kind, mode and owner must still match.
 # [[normalize]]: the pattern is replaced before hashing, so the rest of the file must still match.
-# Paths are globs over the image's absolute paths ("*" crosses "/"). Each rule says why, and what upstream
-# change would remove it (openstack-helm-images, docs/upstream/ in manticloud-deployer). A rule that matches
-# nothing is reported, so it comes out when upstream fixes it.
+# Paths are globs over the image's absolute paths ("*" crosses "/"). Each rule says why, and what change in
+# openstack-helm-images would remove it. A rule that matches nothing is reported, so it comes out when upstream fixes it.
 
 # Written by the container engine when the compared container is created, not part of the image.
 [[ignore]]

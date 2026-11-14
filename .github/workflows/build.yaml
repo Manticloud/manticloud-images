@@ -1,6 +1,6 @@
 # Every image on every branch: build, check, scan, build again from scratch and compare. A v* tag also publishes,
-# attests and writes the release. The build runs in podman's own image, the version the build host runs, so CI and a
-# local `tools/build.py` build the same way.
+# attests and writes the release. The build runs in podman's own image at a pinned version, so CI and a local
+# `tools/build.py` build the same way.
 name: Build
 
 on:

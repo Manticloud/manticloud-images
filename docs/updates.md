@@ -12,8 +12,8 @@ the change before anything is published:
 
 ## Why
 
-- **Consistency** (the user, 2026-11-13: "whatever we do needs to be PINNABLE - we need consistency"). A floating input
-  (a branch tip, a `latest` tag, today's package archive) changes an image without anyone deciding to. Pinning
+- **Consistency.** A floating input (a branch tip, a `latest` tag, today's package archive) changes an image without
+  anyone deciding to. Pinning
   everything means an image changes only when a pull request says so, and two builds from the same commit of this
   repository hold the same files (`tools/compare_builds.py`).
 - **Pins rot.** Upstream keeps fixing bugs and CVEs. Without something that notices, the pins fall behind and the images
@@ -66,7 +66,7 @@ database. A CVE published after the release shows up here: the workflow keeps on
 a fixable critical or high CVE is found, adds the day's report to it, and closes it when none is.
 
 To fix one: add the package to the branch's `[constraints]` at the fixed version, with the CVE IDs as its `why`, and open
-a pull request. Its build shows whether the fix fits: on 2026-11-13 cryptography 49 needed pyOpenSSL 26.3.0 to resolve,
+a pull request. Its build shows whether the fix fits: cryptography 49, for example, needed pyOpenSSL 26.3.0 to resolve,
 and then broke Cinder's imports until cursive went to 0.3.1. If a CVE doesn't apply to how the image is used, say so in
 `vex.json` (OpenVEX: the status, the justification, the impact) instead of pinning; never in a `.trivyignore`.
 
@@ -82,4 +82,4 @@ and then broke Cinder's imports until cursive went to 0.3.1. If a CVE doesn't ap
 
 A `v*` tag (`v2026.11.14`) builds, checks, scans and compares again, then pushes each image as
 `<branch>-<ubuntu>-<project version>-<commit>`, attests it (provenance and an SBOM), and writes a release listing every
-image with its digest and pins. MANTI Deployer pins a digest from that list; a release never pins a `master` image.
+image with its digest and pins. Pin an image by that digest; `master` images are for development, never production.
