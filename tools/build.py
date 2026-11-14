@@ -25,6 +25,9 @@ ROOT = Path(__file__).resolve().parent.parent
 WORK = ROOT / "build"
 ENGINE = os.environ.get("ENGINE", "podman")
 TRIVY = "ghcr.io/aquasecurity/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c"
+# openssh-server's install makes host keys; every pod would share them, and anyone could pull them. Nova's chart
+# makes a pod's own when none is there, so the hook in our base layer removes them in the RUN that installs.
+HOST_KEYS = "/etc/ssh/ssh_host_*_key /etc/ssh/ssh_host_*_key.pub"
 CEPH_PACKAGES = ("ceph", "ceph-common", "python3-rados", "python3-rbd", "python3-cephfs", "python3-ceph-argparse",
                  "python3-ceph-common", "librados2", "librbd1", "libcephfs2", "libradosstriper1", "librgw2")
 SOURCE = "https://github.com/Manticloud/manticloud-images"
@@ -136,7 +139,8 @@ def mirror(name: str, source: str, branch: str, commit: str, context: Path) -> N
         run("git", "-C", str(cache), "fetch", "-q", "origin", f"+refs/heads/{branch}:refs/heads/{branch}", "--tags")
     dest = context / "src" / f"{name}.git"
     run("git", "clone", "-q", "--bare", "--single-branch", "-b", branch, str(cache), str(dest))
-    run("git", "-C", str(dest), "fetch", "-q", "--tags", str(cache))
+    # No background maintenance after the fetch: it writes into the mirror while the build copies it.
+    run("git", "-C", str(dest), "-c", "maintenance.auto=false", "-c", "gc.auto=0", "fetch", "-q", "--tags", str(cache))
     run("git", "-C", str(dest), "branch", "-f", "pinned", commit)
 
 
@@ -208,9 +212,13 @@ def pin_layers(spec: Spec, venv_builder: str, base: str) -> tuple[str, str]:
         "ARG FROM\nFROM ${FROM}\nCOPY 50-manti-snapshot /etc/apt/apt.conf.d/\n"
         "COPY upper-constraints.txt /upper-constraints.txt\nCOPY src/ /src/\n"
         # uWSGI's parallel compile sometimes links before an object exists ("cannot find core/legion.o").
-        "ENV CPUCOUNT=1\n")
+        "ENV CPUCOUNT=1\n"
+        # Debug info records uv's random build folder, so C extensions built from source differ between builds.
+        "ENV CFLAGS=-g0\n")
+    (context / "50-manti-no-host-keys").write_text(f'DPkg::Post-Invoke {{ "rm -f {HOST_KEYS}"; }};\n')
     (context / "Containerfile.base").write_text(
-        "ARG FROM\nFROM ${FROM}\nCOPY 50-manti-snapshot /etc/apt/apt.conf.d/\nCOPY 50-manti-ceph /etc/apt/preferences.d/\n")
+        "ARG FROM\nFROM ${FROM}\nCOPY 50-manti-snapshot 50-manti-no-host-keys /etc/apt/apt.conf.d/\n"
+        "COPY 50-manti-ceph /etc/apt/preferences.d/\n")
     tags = (f"localhost/manti-pin/{spec.image}-venv_builder:{spec.branch}", f"localhost/manti-pin/{spec.image}-base:{spec.branch}")
     run(ENGINE, "build", "-q", "-f", str(context / "Containerfile.venv_builder"), "--build-arg", f"FROM={venv_builder}",
         "-t", tags[0], str(context))
@@ -266,6 +274,8 @@ def check(spec: Spec, tag: str) -> None:
     for name, pin in spec.br.get("constraints", {}).items():
         if frozen.get(norm(name), pin["version"]) != pin["version"]:
             failures.append(f"{name} is {frozen[norm(name)]}, not the pinned {pin['version']}")
+    if keys := in_image(tag, f"ls {HOST_KEYS} 2>/dev/null").stdout.split():
+        failures.append(f"SSH host keys baked into the image: {', '.join(keys)}")
     checks = [("image", spec.img["check"])] + [(f"driver {n}", d["check"]) for n, d in spec.drivers.items()]
     for what, script in checks:
         result = in_image(tag, script)
