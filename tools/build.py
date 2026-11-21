@@ -97,6 +97,10 @@ class Spec:
         if problems:
             raise SystemExit("\n".join(problems))
 
+    def dockerfile(self, ohi: Path) -> Path:
+        """Upstream's Dockerfile at the pinned commit, or the one carried here until upstream has one."""
+        return ROOT / "carried" / self.img["dockerfile"] if self.img.get("carried") else ohi / self.img["dockerfile"]
+
     @property
     def project_name(self) -> str:
         return self.img["dockerfile"].split("/")[0]
@@ -135,6 +139,8 @@ def mirror(name: str, source: str, branch: str, commit: str, context: Path) -> N
     cache = WORK / "mirrors" / f"{name}.git"
     if not cache.exists():
         run("git", "clone", "-q", "--bare", source, str(cache))
+    elif run("git", "-C", str(cache), "remote", "get-url", "origin", capture=True).strip() != source:
+        run("git", "-C", str(cache), "remote", "set-url", "origin", source)      # an image's source moved (a fork)
     if subprocess.run(["git", "-C", str(cache), "cat-file", "-e", commit + "^{commit}"]).returncode:
         run("git", "-C", str(cache), "fetch", "-q", "origin", f"+refs/heads/{branch}:refs/heads/{branch}", "--tags")
     dest = context / "src" / f"{name}.git"
@@ -239,7 +245,7 @@ def build(spec: Spec, tag: str, no_cache: bool) -> None:
     loose = unconstrained(spec, (WORK / f"{spec.image}-{spec.branch}" / "upper-constraints.txt").read_text())
     if loose:
         raise SystemExit(f"not in upper-constraints and not pinned: {', '.join(loose)}")
-    cmd = [ENGINE, "build", "-f", str(ohi / spec.img["dockerfile"]),
+    cmd = [ENGINE, "build", "-f", str(spec.dockerfile(ohi)),
            "--build-arg", f"BASE_VENV_BUILDER={venv_builder}", "--build-arg", f"BASE_RUNTIME={base}",
            "--build-arg", f"{spec.img['repo_arg']}=file:///src/{spec.project_name}.git",
            "--build-arg", f"{spec.img['ref_arg']}=pinned",
