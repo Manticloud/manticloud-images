@@ -2,8 +2,8 @@
   "@context": "https://openvex.dev/ns/v0.2.0",
   "@id": "https://github.com/Manticloud/manticloud-images/vex.json",
   "author": "MANTI",
-  "timestamp": "2026-11-13T00:00:00Z",
-  "version": 1,
+  "timestamp": "2026-11-21T00:00:00Z",
+  "version": 2,
   "statements": [
     {
       "vulnerability": {
@@ -17,6 +17,24 @@
       "status": "not_affected",
       "justification": "vulnerable_code_not_present",
       "impact_statement": "Fixed in Keystone 2012.1. Keystone left date-based versions in 2015, so a scanner compares 30.x with 2012.1 and reports it; every Keystone built here has the fix."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-97054"
+      },
+      "products": [
+        {
+          "@id": "pkg:golang/github.com/canonical/pebble",
+          "subcomponents": [
+            {
+              "@id": "pkg:golang/stdlib"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Go's standard library in /usr/bin/pebble, which Ubuntu 26.04's container base image ships outside any package. Nothing in these images runs pebble: the base image's command is bash and each image runs its own service. Scoped to pebble; the same CVE in any other Go binary still fails the scan."
     }
   ]
 }
