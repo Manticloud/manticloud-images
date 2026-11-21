@@ -16,6 +16,7 @@ Published to `ghcr.io/manticloud/<image>`.
 | `upstream.toml` | openstack-helm-images, at a commit |
 | `branches/<branch>.toml` | one OpenStack branch: Ubuntu, base images by digest, the package snapshot, Ceph's version, the constraints we pin and why |
 | `images/<image>.toml` | upstream's Dockerfile for the image, and the project's commit on each branch it's built for |
+| `carried/<image>/Dockerfile` | a Dockerfile openstack-helm-images doesn't have yet, built until it does (`carried = true`) |
 | `drivers/<image>/<driver>.toml` | one driver: its packages, its check, license and source |
 | `vex.json` | CVEs that don't apply, each with its reason (OpenVEX) |
 | `build-noise.toml` | the files two builds from the same inputs may differ in, and the upstream change that would end each |
@@ -48,4 +49,5 @@ per image while a fixable critical or high CVE is found. Renovate moves the pins
 - **A branch** (2027.1): `branches/2027.1.toml` once openstack-helm-images publishes its base images, and a line in
   each `images/*.toml`.
 - **An image**: `images/<image>.toml` naming upstream's Dockerfile, and its project in `renovate.json`.
+  Upstream has no Dockerfile for it: `carried/<image>/Dockerfile` and `carried = true`, removed when upstream's lands.
 - **A constraint**: a line in the branch's `[constraints]`, with the CVEs or the reason.
