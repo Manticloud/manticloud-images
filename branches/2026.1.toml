@@ -4,7 +4,7 @@ venv_builder = "quay.io/airshipit/venv_builder:2026.1-ubuntu_noble@sha256:ad4ba3
 base = "quay.io/airshipit/base:2026.1-ubuntu_noble@sha256:b16617fe13a679f0fa9c3b639b158173ea7aee194bcce28c1a0d2970125293e1"
 
 # Ubuntu's packages as they were at this time (snapshot.ubuntu.com).
-snapshot = "20261113T000000Z"
+snapshot = "20261121T000000Z"
 
 # Ceph's packages come from a repository that keeps only its newest version: this one, or the build fails.
 [ceph]
