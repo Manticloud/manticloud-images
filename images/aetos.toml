@@ -1,0 +1,13 @@
+# Aetos, Keystone's multi-tenancy in front of Prometheus. openstack-helm-images has no Dockerfile for it yet: the
+# one in carried/aetos/ is built until it does.
+dockerfile = "aetos/Dockerfile"
+carried = true
+repo_arg = "AETOS_REPO"
+ref_arg = "AETOS_REF"
+source = "https://opendev.org/openstack/aetos"
+check = "uwsgi --version && python -c 'import aetos.app, aetos.controllers.api.v1.root, keystonemiddleware.auth_token'"
+
+[branches]
+"2026.1" = { branch = "stable/2026.1", commit = "bbcb5f73d17fe98ee40bb7d3a6e2bf189663516b" }
+"2026.2" = { branch = "stable/2026.2", commit = "530209d00dda266b8ced07524de0e7f8de94b54c" }
+master = { branch = "master", commit = "bcb59cff8c95c26627d80c86130c53355fe1b982" }
