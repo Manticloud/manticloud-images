@@ -139,6 +139,8 @@ def mirror(name: str, source: str, branch: str, commit: str, context: Path) -> N
     cache = WORK / "mirrors" / f"{name}.git"
     if not cache.exists():
         run("git", "clone", "-q", "--bare", source, str(cache))
+    elif run("git", "-C", str(cache), "remote", "get-url", "origin", capture=True).strip() != source:
+        run("git", "-C", str(cache), "remote", "set-url", "origin", source)      # an image's source moved (a fork)
     if subprocess.run(["git", "-C", str(cache), "cat-file", "-e", commit + "^{commit}"]).returncode:
         run("git", "-C", str(cache), "fetch", "-q", "origin", f"+refs/heads/{branch}:refs/heads/{branch}", "--tags")
     dest = context / "src" / f"{name}.git"
