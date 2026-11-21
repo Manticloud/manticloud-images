@@ -1,0 +1,14 @@
+# Aetos, Keystone's multi-tenancy in front of Prometheus. openstack-helm-images has no Dockerfile for it yet: the
+# one in carried/aetos/ is built until it does. Built from Manticloud/aetos: upstream's branch plus the query_range
+# endpoint (Prometheus's range query, with the same project scoping as query), until upstream has it.
+dockerfile = "aetos/Dockerfile"
+carried = true
+repo_arg = "AETOS_REPO"
+ref_arg = "AETOS_REF"
+source = "https://github.com/Manticloud/aetos"
+check = "uwsgi --version && python -c 'import aetos.app, aetos.controllers.api.v1.query_range, keystonemiddleware.auth_token'"
+
+[branches]
+"2026.1" = { branch = "query-range-2026.1", commit = "a3af797f1dc4a963e5cca656ad3185ea61670872" }
+"2026.2" = { branch = "query-range-2026.2", commit = "54a42351008e8d2931107106aa4622008e70ad0b" }
+master = { branch = "query-range", commit = "365f5d6cfb4283f813fe248b4e71b4362ad5ad8c" }

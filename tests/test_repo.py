@@ -23,6 +23,11 @@ class Repo(unittest.TestCase):
         images = {p.stem for p in (ROOT / "images").glob("*.toml")}
         self.assertTrue({p.name for p in (ROOT / "drivers").iterdir()} <= images)
 
+    def test_a_carried_dockerfile_exists_and_only_where_an_image_says_so(self):
+        carried = {p.relative_to(ROOT / "carried").as_posix() for p in (ROOT / "carried").rglob("Dockerfile")}
+        named = {build.load(p)["dockerfile"] for p in (ROOT / "images").glob("*.toml") if build.load(p).get("carried")}
+        self.assertEqual(carried, named)
+
     def test_every_constraint_says_why(self):
         for path in (ROOT / "branches").glob("*.toml"):
             for name, pin in build.load(path).get("constraints", {}).items():
