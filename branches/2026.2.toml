@@ -2,7 +2,7 @@
 ubuntu = "ubuntu_resolute"
 venv_builder = "quay.io/airshipit/venv_builder:2026.2-ubuntu_resolute@sha256:1e3bb8d72361c1620c48bac9ba8c45c8309282c82fea7d987fcc4ae9addd92cd"
 base = "quay.io/airshipit/base:2026.2-ubuntu_resolute@sha256:1f62e77e81ff887d11fe86ff58d9a9f9a544e4cabd466a0e83b8e311162b9416"
-snapshot = "20261113T000000Z"
+snapshot = "20261121T000000Z"
 
 [ceph]
 version = "20.2.4-1+mirantis1+u26.04"
