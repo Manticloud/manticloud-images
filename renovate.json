@@ -153,7 +153,7 @@
       "datasourceTemplate": "git-refs"
     },
     {
-      "description": "aetos, at a commit on each OpenStack branch",
+      "description": "aetos, at a commit on each branch of Manticloud/aetos",
       "customType": "regex",
       "managerFilePatterns": [
         "/^images/aetos\\.toml$/"
@@ -161,7 +161,7 @@
       "matchStrings": [
         "\\{ branch = \"(?<currentValue>[^\"]+)\", commit = \"(?<currentDigest>[0-9a-f]{40})\" \\}"
       ],
-      "depNameTemplate": "https://opendev.org/openstack/aetos",
+      "depNameTemplate": "https://github.com/Manticloud/aetos",
       "datasourceTemplate": "git-refs"
     },
     {
