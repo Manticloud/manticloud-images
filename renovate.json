@@ -234,6 +234,28 @@
         "(?<depName>(?:ghcr|quay)\\.io/[^:\"\\s]+):(?<currentValue>v?\\d[^@\"\\s]*)@(?<currentDigest>sha256:[0-9a-f]{64})"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "description": "metal3-io/ironic-image, at a commit on its release branch",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^metal3/ironic\\.toml$/"
+      ],
+      "matchStrings": [
+        "repo = \"(?<depName>[^\"]+)\"\\nbranch = \"(?<currentValue>[^\"]+)\"\\ncommit = \"(?<currentDigest>[0-9a-f]{40})\""
+      ],
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "description": "Ironic's base image by tag and digest",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^metal3/ironic\\.toml$/"
+      ],
+      "matchStrings": [
+        "base = \"(?<depName>[^:\"]+):(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[0-9a-f]{64})\""
+      ],
+      "datasourceTemplate": "docker"
     }
   ]
 }

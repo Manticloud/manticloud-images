@@ -38,6 +38,8 @@ regular expression per kind of pin. Both are free on a public repository.
 | A driver's `==` packages | `drivers/<image>/<driver>.toml` | PyPI |
 | Trivy, and podman's image CI builds in | `tools/build.py`, `.github/workflows/` | the tag's current digest, and newer tags |
 | GitHub actions | `.github/workflows/` | each action's releases, kept pinned by commit |
+| Ironic's commit | `metal3/ironic.toml` | metal3-io/ironic-image's `release-39.0` branch |
+| Ironic's base image | `metal3/ironic.toml`: `base` | the tag's current digest |
 
 Renovate's **Dependency Dashboard** issue lists every pin it found and every pending update. A pin missing from it means
 its `customManagers` expression didn't match the file: fix the expression, or the file.

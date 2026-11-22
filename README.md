@@ -22,6 +22,8 @@ Published to `ghcr.io/manticloud/<image>`.
 | `build-noise.toml` | the files two builds from the same inputs may differ in, and the upstream change that would end each |
 | `tools/build.py` | build, check, scan and name an image, the same way on a workstation and in CI |
 | `tools/compare_builds.py` | compares two builds file by file; fails on anything `build-noise.toml` doesn't name |
+| `metal3/ironic.toml` | `metal3-ironic`, metal3's standalone Ironic: metal3-io/ironic-image at a commit, its base image by digest, and what it must hold |
+| `tools/metal3.py` | build, check and scan `metal3-ironic` for one platform |
 
 ## Build one
 
@@ -41,6 +43,21 @@ attests (provenance and SBOM) and writes the release. `scan.yaml` scans what's p
 per image while a fixable critical or high CVE is found. Renovate moves the pins by pull request.
 
 **How the pins move, and what to do with each pull request and issue: [docs/updates.md](docs/updates.md).**
+
+## metal3's Ironic
+
+`metal3-ironic` is metal3-io/ironic-image's own standalone Ironic, built from its Dockerfile unchanged, for amd64 and arm64: upstream
+publishes it for amd64 only. It installs CentOS Stream's packages as it builds, so it isn't held to `compare_builds.py`,
+and its scan is reported, not failed on. `.github/workflows/metal3-ironic.yaml` builds each platform on its own runner, and a
+`metal3-ironic-*` tag publishes both as one multi-arch image, `ghcr.io/manticloud/metal3-ironic:<branch>-<commit>`.
+It isn't an openstack-helm Ironic service image: that would be `images/ironic.toml`, published as
+`ghcr.io/manticloud/ironic` like the others.
+
+```console
+python3 tools/metal3.py build arm64 localhost/manti/metal3-ironic:arm64
+python3 tools/metal3.py check localhost/manti/metal3-ironic:arm64
+python3 tools/metal3.py scan localhost/manti/metal3-ironic:arm64
+```
 
 ## Add
 
