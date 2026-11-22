@@ -1,15 +1,15 @@
-# Ironic's image (metal3/ironic.toml): built on amd64 and arm64 runners, each checked and scanned. An ironic-* tag also
+# metal3's Ironic image (metal3/ironic.toml): built on amd64 and arm64 runners, each checked and scanned. A metal3-ironic-* tag also
 # publishes each platform, attested with provenance and its SBOM, and joins them as one multi-arch image.
 # A scan's findings are reported in its artifact, never failed on: the image is upstream's, unchanged.
-name: Ironic
+name: metal3 Ironic
 
 on:
   pull_request:
-    paths: ["metal3/**", "tools/metal3.py", "tools/build.py", ".github/workflows/ironic.yaml"]
+    paths: ["metal3/**", "tools/metal3.py", "tools/build.py", ".github/workflows/metal3-ironic.yaml"]
   push:
     branches: [main]
-    paths: ["metal3/**", "tools/metal3.py", "tools/build.py", ".github/workflows/ironic.yaml"]
-    tags: ["ironic-*"]
+    paths: ["metal3/**", "tools/metal3.py", "tools/build.py", ".github/workflows/metal3-ironic.yaml"]
+    tags: ["metal3-ironic-*"]
   workflow_dispatch:
 
 permissions:
@@ -20,12 +20,12 @@ defaults:
     shell: bash
 
 concurrency:
-  group: ironic-${{ github.ref }}
+  group: metal3-ironic-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   platform:
-    name: ironic ${{ matrix.platform }}
+    name: metal3-ironic ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     strategy:
@@ -45,7 +45,7 @@ jobs:
     env:
       BUILDAH_ISOLATION: oci
       PLATFORM: ${{ matrix.platform }}
-      ONE: localhost/manti/ironic:${{ matrix.platform }}
+      ONE: localhost/manti/metal3-ironic:${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build
@@ -57,29 +57,29 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: scan-ironic-${{ matrix.platform }}
+          name: scan-metal3-ironic-${{ matrix.platform }}
           path: scan/
           if-no-files-found: ignore
 
       - name: Publish
         id: publish
-        if: startsWith(github.ref, 'refs/tags/ironic-')
+        if: startsWith(github.ref, 'refs/tags/metal3-ironic-')
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ironic"
+          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/metal3-ironic"
           echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           podman push --digestfile digest "$ONE" "$name:$(python3 tools/metal3.py version)-$PLATFORM"
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "digest=$(cat digest)" >> "$GITHUB_OUTPUT"
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        if: startsWith(github.ref, 'refs/tags/ironic-')
+        if: startsWith(github.ref, 'refs/tags/metal3-ironic-')
         with:
           subject-name: ${{ steps.publish.outputs.name }}
           subject-digest: ${{ steps.publish.outputs.digest }}
           push-to-registry: true
       - uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
-        if: startsWith(github.ref, 'refs/tags/ironic-')
+        if: startsWith(github.ref, 'refs/tags/metal3-ironic-')
         with:
           subject-name: ${{ steps.publish.outputs.name }}
           subject-digest: ${{ steps.publish.outputs.digest }}
@@ -88,7 +88,7 @@ jobs:
 
   publish:
     needs: platform
-    if: startsWith(github.ref, 'refs/tags/ironic-')
+    if: startsWith(github.ref, 'refs/tags/metal3-ironic-')
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -105,7 +105,7 @@ jobs:
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ironic"
+          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/metal3-ironic"
           version=$(python3 tools/metal3.py version)
           echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           podman manifest create "$name:$version"

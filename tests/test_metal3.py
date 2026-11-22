@@ -17,7 +17,7 @@ class Ironic(unittest.TestCase):
         metal3.load()
 
     def test_the_workflow_builds_every_platform_and_publishes_them_as_one(self):
-        text = (ROOT / ".github" / "workflows" / "ironic.yaml").read_text()
+        text = (ROOT / ".github" / "workflows" / "metal3-ironic.yaml").read_text()
         for platform in metal3.PLATFORMS:
             self.assertRegex(text, rf"platform: {platform}, runner: ")
             self.assertIn(platform, re.search(r"for p in ([^;]+);", text).group(1))

@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("check").add_argument("tag")
     p = sub.add_parser("scan")
     p.add_argument("tag")
-    p.add_argument("--out", type=Path, default=build.WORK / "scan-ironic")
+    p.add_argument("--out", type=Path, default=build.WORK / "scan-metal3-ironic")
     sub.add_parser("version")
     args = parser.parse_args(argv)
     if args.cmd == "build":
