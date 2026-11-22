@@ -1,0 +1,13 @@
+# Ironic, bare-metal provisioning: metal3-io/ironic-image (Apache-2.0) built from its own Dockerfile, unchanged, at one
+# commit, for amd64 and arm64, as one multi-arch image. Upstream publishes this release for amd64 only.
+# Its packages come from CentOS Stream's mirrors when it builds, so two builds can differ: it's held to its checks and a
+# scan report, not to compare_builds.py (tools/metal3.py).
+repo = "https://github.com/metal3-io/ironic-image"
+branch = "release-39.0"
+commit = "9f9f54ce1a5adef3deaf16ddc94d492a3adb423c"
+# upstream's BASE_IMAGE, by digest
+base = "quay.io/centos/centos:stream9-minimal@sha256:9ff24005ad72d016144745631e70b79abf8bab731bedb07c8bfe2b10f994b6af"
+# Ironic's own commit, as its installed package records it (pbr.json's git_version; 39.0.1.dev32)
+ironic = "9074fcc3d"
+# Ironic and its Redfish library import; both CPUs' UEFI boot images and iPXE binaries are there, whichever CPU it's for
+check = "python3.12 -c 'import ironic.conductor.manager, sushy' && test -s /templates/uefi_esp_x86_64.img && test -s /templates/uefi_esp_aarch64.img && test -s /tftpboot/snponly-x86_64.efi && test -s /tftpboot/snponly-arm64.efi"

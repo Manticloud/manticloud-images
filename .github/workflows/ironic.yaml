@@ -1,0 +1,121 @@
+# Ironic's image (metal3/ironic.toml): built on amd64 and arm64 runners, each checked and scanned. An ironic-* tag also
+# publishes each platform, attested with provenance and its SBOM, and joins them as one multi-arch image.
+# A scan's findings are reported in its artifact, never failed on: the image is upstream's, unchanged.
+name: Ironic
+
+on:
+  pull_request:
+    paths: ["metal3/**", "tools/metal3.py", "tools/build.py", ".github/workflows/ironic.yaml"]
+  push:
+    branches: [main]
+    paths: ["metal3/**", "tools/metal3.py", "tools/build.py", ".github/workflows/ironic.yaml"]
+    tags: ["ironic-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ironic-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  platform:
+    name: ironic ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: amd64, runner: ubuntu-24.04 }
+          - { platform: arm64, runner: ubuntu-24.04-arm }
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    container:
+      image: quay.io/podman/stable:v5.8.2@sha256:663e0dbf407987b7db3f20d3588c283a8228db17b282d2029a482d4d47e36964
+      options: --privileged --volume /mnt/containers:/var/lib/containers
+    env:
+      BUILDAH_ISOLATION: oci
+      PLATFORM: ${{ matrix.platform }}
+      ONE: localhost/manti/ironic:${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build
+        run: python3 tools/metal3.py build "$PLATFORM" "$ONE"
+      - name: Check Ironic's commit and what the image must hold
+        run: python3 tools/metal3.py check "$ONE"
+      - name: Scan
+        run: python3 tools/metal3.py scan "$ONE" --out scan
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: scan-ironic-${{ matrix.platform }}
+          path: scan/
+          if-no-files-found: ignore
+
+      - name: Publish
+        id: publish
+        if: startsWith(github.ref, 'refs/tags/ironic-')
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ironic"
+          echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          podman push --digestfile digest "$ONE" "$name:$(python3 tools/metal3.py version)-$PLATFORM"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "digest=$(cat digest)" >> "$GITHUB_OUTPUT"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: startsWith(github.ref, 'refs/tags/ironic-')
+        with:
+          subject-name: ${{ steps.publish.outputs.name }}
+          subject-digest: ${{ steps.publish.outputs.digest }}
+          push-to-registry: true
+      - uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        if: startsWith(github.ref, 'refs/tags/ironic-')
+        with:
+          subject-name: ${{ steps.publish.outputs.name }}
+          subject-digest: ${{ steps.publish.outputs.digest }}
+          sbom-path: scan/sbom.cdx.json
+          push-to-registry: true
+
+  publish:
+    needs: platform
+    if: startsWith(github.ref, 'refs/tags/ironic-')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    container:
+      image: quay.io/podman/stable:v5.8.2@sha256:663e0dbf407987b7db3f20d3588c283a8228db17b282d2029a482d4d47e36964
+      options: --privileged
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Join both platforms as one image
+        id: publish
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ironic"
+          version=$(python3 tools/metal3.py version)
+          echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          podman manifest create "$name:$version"
+          for p in amd64 arm64; do podman manifest add "$name:$version" "docker://$name:$version-$p"; done
+          podman manifest push --all --digestfile digest "$name:$version" "docker://$name:$version"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "digest=$(cat digest)" >> "$GITHUB_OUTPUT"
+          echo "\`$name:$version@$(cat digest)\`" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ steps.publish.outputs.name }}
+          subject-digest: ${{ steps.publish.outputs.digest }}
+          push-to-registry: true
