@@ -68,6 +68,8 @@ jobs:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/metal3-ironic"
+          echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          # the attest actions read Docker's credentials file, not podman's
           mkdir -p "$HOME/.docker" && echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin --compat-auth-file "$HOME/.docker/config.json"
           podman push --digestfile digest "$ONE" "$name:$(python3 tools/metal3.py version)-$PLATFORM"
           echo "name=$name" >> "$GITHUB_OUTPUT"
@@ -107,6 +109,8 @@ jobs:
         run: |
           name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/metal3-ironic"
           version=$(python3 tools/metal3.py version)
+          echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          # the attest actions read Docker's credentials file, not podman's
           mkdir -p "$HOME/.docker" && echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin --compat-auth-file "$HOME/.docker/config.json"
           podman manifest create "$name:$version"
           for p in amd64 arm64; do podman manifest add "$name:$version" "docker://$name:$version-$p"; done
