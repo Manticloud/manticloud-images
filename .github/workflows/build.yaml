@@ -84,6 +84,8 @@ jobs:
           version=$(python3 tools/build.py version "$IMAGE" "$BRANCH" "$ONE")
           name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/$IMAGE"
           echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          # the attest actions read Docker's credentials file, not podman's
+          mkdir -p "$HOME/.docker" && echo "$TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin --compat-auth-file "$HOME/.docker/config.json"
           podman push --digestfile digest "$ONE" "$name:$version"
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "digest=$(cat digest)" >> "$GITHUB_OUTPUT"
